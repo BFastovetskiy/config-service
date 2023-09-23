@@ -34,18 +34,18 @@ var (
 )
 
 func getArgs() {
-	flag.BoolFunc("i", "Interactive configuration service", interactiveConfiguration)
-	clusterPort = *flag.Int("listener-cluster-port", 4000, "Listener cluster port")
-	db = *flag.String("database-name", "database.db", "Database name")
-	dbg = *flag.Bool("debug", false, "Use http listener for profilers and debug")
+	flag.BoolFunc("i", "Interactive mode the service setup", interactiveConfiguration)
 	srvPort = *flag.Int("listener-port", 3000, "Listener HTTP port")
 	srvSslPort = *flag.Int("listener-ssl-port", 3001, "Listener SSL port")
+	clusterPort = *flag.Int("listener-cluster-port", 4000, "Listener cluster port")
+	db = *flag.String("database-name", "database.db", "Database name")
 	onlySsl = *flag.Bool("only-ssl", false, "Listener only SSL")
 	pem = *flag.String("certificate-pem", "public.crt", "PEM file certificate")
 	key = *flag.String("certificate-key", "private.key", "Key file certificate")
-	secret = *flag.String("secret", "EIaUPvdI1ONo6IQowmo6HsSRZBxUv4Hb", "Secret for connection to Discovery service")
+	secret = *flag.String("secret", "EIaUPvdI1ONo6IQowmo6HsSRZBxUv4Hb", "Secret for connection to service")
 	frequency = *flag.Int("frequency", 60, "Frequency timeout of checking the availability of services. Seconds")
 	join = *flag.String("join-to", "", "Address to join on cluster")
+	dbg = *flag.Bool("debug", false, "Use http listener for profilers and debug")
 
 	flag.Parse()
 }
