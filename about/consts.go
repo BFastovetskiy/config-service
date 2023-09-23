@@ -3,7 +3,7 @@ package about
 import "time"
 
 const (
-	Application_Title                  string        = "RAFT cluster test application"
+	Application_Title                  string        = "Configiguration & discovery service"
 	Application_Version                string        = "v0.1.3-beta"
 	Application_Configuration_File     string        = "app.config"
 	Application_Health_Url             string        = "/actuator/health"
