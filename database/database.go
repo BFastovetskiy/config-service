@@ -88,12 +88,12 @@ func (d Database) SetValue(namespace string, key string, value []byte) error {
 func (d Database) SetW(namespace, key, value []byte) error {
 	var mu sync.Mutex
 	mu.Lock()
+	defer mu.Unlock()
 	err := d.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(toByte(about.Database_Namespace_Root)).Bucket(namespace)
 		err := bucket.Put(key, value)
 		return err
 	})
-	mu.Unlock()
 	if err != nil {
 		d.log.Debugf("Failed to set key %s for namespace %s: %v", key, namespace, err)
 		return err
@@ -110,12 +110,12 @@ func (d Database) DelValue(namespace, key string) error {
 func (d Database) DelW(namespace, key []byte) error {
 	var mu sync.Mutex
 	mu.Lock()
+	defer mu.Unlock()
 	err := d.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(toByte(about.Database_Namespace_Root)).Bucket(namespace)
 		err := bucket.Delete(key)
 		return err
 	})
-	mu.Unlock()
 	if err != nil {
 		d.log.Debugf("Failed del key %s for namespace %s: %v", key, namespace, err)
 		return err
@@ -143,11 +143,11 @@ func toByte(str string) []byte {
 func (d Database) CreateApplication(application string) error {
 	var mu sync.Mutex
 	mu.Lock()
+	defer mu.Unlock()
 	err := d.db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.Bucket(toByte(about.Database_Namespace_Root)).CreateBucketIfNotExists(toByte(application))
 		return err
 	})
-	mu.Unlock()
 	if err != nil {
 		d.log.Errorf("Could not create bucket for application: %v", err)
 	}
@@ -158,6 +158,7 @@ func (d Database) CreateApplication(application string) error {
 func (d Database) DeleteApplication(application string) error {
 	var mu sync.Mutex
 	mu.Lock()
+	defer mu.Unlock()
 	err := d.db.Update(func(tx *bolt.Tx) error {
 		err := tx.Bucket(toByte(about.Database_Namespace_Root)).DeleteBucket(toByte(application))
 		if err != nil {
@@ -165,7 +166,6 @@ func (d Database) DeleteApplication(application string) error {
 		}
 		return err
 	})
-	mu.Unlock()
 	return err
 }
 
@@ -174,6 +174,7 @@ func (d Database) SetApplicationData(application string, item core.DiscoveryItem
 	d.CreateApplication(application)
 	var mu sync.Mutex
 	mu.Lock()
+	defer mu.Unlock()
 	err := d.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(toByte(about.Database_Namespace_Root)).Bucket(toByte(application))
 		data, err := json.Marshal(item)
@@ -184,7 +185,6 @@ func (d Database) SetApplicationData(application string, item core.DiscoveryItem
 		err = bucket.Put(toByte("Value"), data)
 		return err
 	})
-	mu.Unlock()
 	return err
 }
 

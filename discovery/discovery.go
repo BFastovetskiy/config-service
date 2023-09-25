@@ -38,8 +38,8 @@ func (d DiscoveryService) addService(service core.DiscoveryItem) {
 	si = append(si, service)
 	var mu sync.Mutex
 	mu.Lock()
+	defer mu.Unlock()
 	d.discovery[service.Name] = si
-	mu.Unlock()
 	d.log.Infof("Discovery register new item service [%v]", service.Name)
 }
 
@@ -61,8 +61,9 @@ func (d DiscoveryService) SetService(service core.DiscoveryItem) {
 	}
 	var mu sync.Mutex
 	mu.Lock()
+	defer mu.Unlock()
 	d.discovery[service.Name] = si
-	mu.Unlock()
+
 	d.db.SetApplicationData(service.Name, service)
 	if !notFoundService {
 		d.addService(service)
@@ -75,8 +76,8 @@ func (d DiscoveryService) DelService(service core.DiscoveryItem) {
 	si := d.discovery[service.Name]
 	if len(si) == 1 {
 		mu.Lock()
+		defer mu.Unlock()
 		delete(d.discovery, service.Name)
-		mu.Unlock()
 		return
 	}
 	var index int
@@ -87,9 +88,9 @@ func (d DiscoveryService) DelService(service core.DiscoveryItem) {
 		}
 	}
 	mu.Lock()
+	defer mu.Unlock()
 	si[index] = si[len(si)-1]
 	d.discovery[service.Name] = si[:len(si)-1]
-	mu.Unlock()
 }
 
 // GetSecret implements IDiscoveryService.

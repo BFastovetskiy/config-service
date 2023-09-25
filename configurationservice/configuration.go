@@ -3,6 +3,7 @@ package configurationservice
 import (
 	"config-service/about"
 	"config-service/core"
+	"config-service/utils"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,7 +26,7 @@ func InitConfigurationService(app core.IApplication) *ConfigurationService {
 		c.files = files
 	}
 
-	c.log.Info("Configuration Service is initialized")
+	c.log.Info("Configuration service is initialized")
 	go watcher(c, 30*time.Second)
 
 	return c
@@ -34,13 +35,13 @@ func InitConfigurationService(app core.IApplication) *ConfigurationService {
 func (c ConfigurationService) loadConfigurations() (map[string]core.ConfigFile, error) {
 	files := make(map[string]core.ConfigFile)
 
-	dirEntry, err := os.ReadDir(c.confDir)
+	dirEntries, err := os.ReadDir(c.confDir)
 	if err != nil {
 		c.log.Error(err.Error())
 		return nil, err
 	}
 
-	for _, file := range dirEntry {
+	for _, file := range dirEntries {
 		if file.IsDir() {
 			continue
 		}
@@ -79,6 +80,7 @@ func (c ConfigurationService) GetConfiguration(system, profile string) core.Conf
 	return c.files[filename]
 }
 
+// TODO determine whether a method is needed
 func (c ConfigurationService) SetConfiguration(system, profile string, data []byte) {
 	var (
 		filename string
@@ -91,10 +93,10 @@ func (c ConfigurationService) SetConfiguration(system, profile string, data []by
 	}
 
 	mu.Lock()
+	defer mu.Unlock()
 	cf := c.files[filename]
 	cf.Body = data
 	c.files[filename] = cf
-	mu.Unlock()
 }
 
 func watcher(c *ConfigurationService, duration time.Duration) {
@@ -106,13 +108,27 @@ func watcher(c *ConfigurationService, duration time.Duration) {
 }
 
 func reloadConfigFiles(c *ConfigurationService) {
-	dirEntry, err := os.ReadDir(c.confDir)
+	var mu sync.Mutex
+
+	// if delete configuration
+	files := make(map[string]core.ConfigFile)
+	for filename, cf := range c.files {
+		if utils.ExistFileOrDir(filepath.Join(c.confDir, filename)) {
+			files[filename] = cf
+		}
+	}
+	mu.Lock()
+	c.files = files
+	mu.Unlock()
+
+	// if add new or modify configuration
+	dirEntries, err := os.ReadDir(c.confDir)
 	if err != nil {
 		c.log.Error(err.Error())
 		return
 	}
 
-	for _, file := range dirEntry {
+	for _, file := range dirEntries {
 		if file.IsDir() {
 			continue
 		}
@@ -140,7 +156,7 @@ func reloadConfigFiles(c *ConfigurationService) {
 				c.log.Error(err.Error())
 				continue
 			}
-			var mu sync.Mutex
+
 			mu.Lock()
 			c.files[filename] = cf
 			mu.Unlock()
