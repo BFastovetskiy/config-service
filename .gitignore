@@ -12,7 +12,17 @@
 *.out
 .DS_Store
 .vscode
+conf
+db
+ssl
+state
 
 # Data store
+conf/*
 db/*
+ssl/*
 state/*
+./conf/*.*
+./db/*.*
+./ssl/*.*
+./state/*.*
